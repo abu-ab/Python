@@ -1,0 +1,120 @@
+# -*- coding: utf-8 -*-：
+import urllib2
+import re
+import MySQLdb
+import datetime
+import urlparse
+import time
+import urllib
+
+class Throttle:
+
+    def __init__(self,delay):
+        self.delay = delay
+        self.domains = {}
+
+    def wait(self,url):
+        #ParseResult(scheme='http', netloc='example.webscraping.com', path='/', params='', query='', fragment='')
+        domain = urlparse.urlparse(url).netloc
+        last_accessed = self.domains.get(domain)
+
+        if(self.delay > 0 and last_accessed is not None):
+            sleep_sec = self.delay - (datetime.datatime.now()-last_accessed).seconds
+            if( sleep_sec > 0 ):
+                time.sleep(sleep_sec)
+
+        self.domains[domain] = datetime.datetime.now()
+
+
+def download(url,num_retries = 2):
+    print 'Downloading:', url
+    try:
+        html = urllib2.urlopen(url).read()
+    except urllib2.URLError as e:
+        print 'Download Error:',e.reason
+        html = None
+        if(num_retries > 0):
+            if hasattr(e,'code') and 500 <= e.code < 600:
+                return download(url,num_retries-1)
+
+
+    return html
+
+
+
+def returnString(str,html):
+    pattern = re.compile(str, re.S)
+    text = re.findall(pattern, html)
+    return text
+
+
+
+coon = MySQLdb.connect(
+    host='localhost',
+    port=3306,
+    user='root',
+    passwd='123456',
+    db='book',
+    charset='utf8'
+)
+
+cur = coon.cursor()
+
+book_name = [
+
+             '\xe6\x8e\xa8\xe7\x90\x86', '\xe9\x9d\x92\xe6\x98\xa5', '\xe8\xa8\x80\xe6\x83\x85', '\xe7\xa7\x91\xe5\xb9\xbb', '\xe4\xb8\x9c\xe9\x87\x8e\xe5\x9c\xad\xe5\x90\xbe', '\xe6\x82\xac\xe7\x96\x91', '\xe6\xad\xa6\xe4\xbe\xa0', '\xe5\xa5\x87\xe5\xb9\xbb', '\xe9\x9f\xa9\xe5\xaf\x92', '\xe6\x97\xa5\xe6\x9c\xac\xe6\xbc\xab\xe7\x94\xbb', '\xe8\x80\xbd\xe7\xbe\x8e', '\xe4\xba\xa6\xe8\x88\x92', '\xe6\x8e\xa8\xe7\x90\x86\xe5\xb0\x8f\xe8\xaf\xb4', '\xe4\xb8\x89\xe6\xaf\x9b', '\xe7\xbd\x91\xe7\xbb\x9c\xe5\xb0\x8f\xe8\xaf\xb4', '\xe5\xae\x89\xe5\xa6\xae\xe5\xae\x9d\xe8\xb4\x9d', '\xe9\x83\xad\xe6\x95\xac\xe6\x98\x8e', '\xe7\xa9\xbf\xe8\xb6\x8a', '\xe9\x87\x91\xe5\xba\xb8', '\xe8\xbd\xbb\xe5\xb0\x8f\xe8\xaf\xb4', '\xe9\x98\xbf\xe5\x8a\xa0\xe8\x8e\x8e\xc2\xb7\xe5\x85\x8b\xe9\x87\x8c\xe6\x96\xaf\xe8\x92\x82', '\xe5\x87\xa0\xe7\xb1\xb3', '\xe9\xad\x94\xe5\xb9\xbb', '\xe9\x9d\x92\xe6\x98\xa5\xe6\x96\x87\xe5\xad\xa6', '\xe7\xa7\x91\xe5\xb9\xbb\xe5\xb0\x8f\xe8\xaf\xb4', '\xe5\xbc\xa0\xe5\xb0\x8f\xe5\xa8\xb4', '\xe5\xb9\xbe\xe7\xb1\xb3', 'J.K.\xe7\xbd\x97\xe7\x90\xb3', '\xe9\xab\x98\xe6\x9c\xa8\xe7\x9b\xb4\xe5\xad\x90', '\xe5\x8f\xa4\xe9\xbe\x99', '\xe6\xb2\xa7\xe6\x9c\x88', '\xe8\x90\xbd\xe8\x90\xbd', '\xe5\xbc\xa0\xe6\x82\xa6\xe7\x84\xb6', '\xe6\xa0\xa1\xe5\x9b\xad', '\xe5\x8e\x86\xe5\x8f\xb2', '\xe5\xbf\x83\xe7\x90\x86\xe5\xad\xa6', '\xe5\x93\xb2\xe5\xad\xa6', '\xe4\xbc\xa0\xe8\xae\xb0', '\xe6\x96\x87\xe5\x8c\x96', '\xe7\xa4\xbe\xe4\xbc\x9a\xe5\xad\xa6', '\xe8\x89\xba\xe6\x9c\xaf', '\xe8\xae\xbe\xe8\xae\xa1', '\xe7\xa4\xbe\xe4\xbc\x9a', '\xe6\x94\xbf\xe6\xb2\xbb', '\xe5\xbb\xba\xe7\xad\x91', '\xe5\xae\x97\xe6\x95\x99', '\xe7\x94\xb5\xe5\xbd\xb1', '\xe6\x95\xb0\xe5\xad\xa6', '\xe6\x94\xbf\xe6\xb2\xbb\xe5\xad\xa6', '\xe5\x9b\x9e\xe5\xbf\x86\xe5\xbd\x95', '\xe4\xb8\xad\xe5\x9b\xbd\xe5\x8e\x86\xe5\x8f\xb2', '\xe6\x80\x9d\xe6\x83\xb3', '\xe5\x9b\xbd\xe5\xad\xa6', '\xe9\x9f\xb3\xe4\xb9\x90', '\xe4\xba\xba\xe6\x96\x87', '\xe4\xba\xba\xe7\x89\xa9\xe4\xbc\xa0\xe8\xae\xb0', '\xe7\xbb\x98\xe7\x94\xbb', '\xe6\x88\x8f\xe5\x89\xa7', '\xe8\x89\xba\xe6\x9c\xaf\xe5\x8f\xb2', '\xe4\xbd\x9b\xe6\x95\x99', '\xe5\x86\x9b\xe4\xba\x8b', '\xe8\xa5\xbf\xe6\x96\xb9\xe5\x93\xb2\xe5\xad\xa6', '\xe4\xba\x8c\xe6\x88\x98', '\xe8\xbf\x91\xe4\xbb\xa3\xe5\x8f\xb2', '\xe8\x80\x83\xe5\x8f\xa4', '\xe8\x87\xaa\xe7\x94\xb1\xe4\xb8\xbb\xe4\xb9\x89', '\xe7\xbe\x8e\xe6\x9c\xaf', '\xe7\x88\xb1\xe6\x83\x85', '\xe6\x97\x85\xe8\xa1\x8c', '\xe7\x94\x9f\xe6\xb4\xbb', '\xe6\x88\x90\xe9\x95\xbf', '\xe5\x8a\xb1\xe5\xbf\x97', '\xe5\xbf\x83\xe7\x90\x86', '\xe6\x91\x84\xe5\xbd\xb1', '\xe5\xa5\xb3\xe6\x80\xa7', '\xe8\x81\x8c\xe5\x9c\xba', '\xe7\xbe\x8e\xe9\xa3\x9f', '\xe6\x95\x99\xe8\x82\xb2', '\xe6\xb8\xb8\xe8\xae\xb0', '\xe7\x81\xb5\xe4\xbf\xae', '\xe5\x81\xa5\xe5\xba\xb7', '\xe6\x83\x85\xe6\x84\x9f', '\xe6\x89\x8b\xe5\xb7\xa5', '\xe4\xb8\xa4\xe6\x80\xa7', '\xe5\x85\xbb\xe7\x94\x9f', '\xe4\xba\xba\xe9\x99\x85\xe5\x85\xb3\xe7\xb3\xbb', '\xe5\xae\xb6\xe5\xb1\x85', '\xe8\x87\xaa\xe5\x8a\xa9\xe6\xb8\xb8', '\xe7\xbb\x8f\xe6\xb5\x8e\xe5\xad\xa6', '\xe7\xae\xa1\xe7\x90\x86', '\xe7\xbb\x8f\xe6\xb5\x8e', '\xe5\x95\x86\xe4\xb8\x9a', '\xe9\x87\x91\xe8\x9e\x8d', '\xe6\x8a\x95\xe8\xb5\x84', '\xe8\x90\xa5\xe9\x94\x80', '\xe5\x88\x9b\xe4\xb8\x9a', '\xe7\x90\x86\xe8\xb4\xa2', '\xe5\xb9\xbf\xe5\x91\x8a', '\xe8\x82\xa1\xe7\xa5\xa8', '\xe4\xbc\x81\xe4\xb8\x9a\xe5\x8f\xb2', '\xe7\xad\x96\xe5\x88\x92', '\xe7\xa7\x91\xe6\x99\xae', '\xe4\xba\x92\xe8\x81\x94\xe7\xbd\x91', '\xe7\xbc\x96\xe7\xa8\x8b', '\xe7\xa7\x91\xe5\xad\xa6', '\xe4\xba\xa4\xe4\xba\x92\xe8\xae\xbe\xe8\xae\xa1', '\xe7\x94\xa8\xe6\x88\xb7\xe4\xbd\x93\xe9\xaa\x8c', '\xe7\xae\x97\xe6\xb3\x95', 'web', '\xe7\xa7\x91\xe6\x8a\x80', 'UE', '\xe9\x80\x9a\xe4\xbf\xa1', '\xe4\xba\xa4\xe4\xba\x92', 'UCD', '\xe7\xa5\x9e\xe7\xbb\x8f\xe7\xbd\x91\xe7\xbb\x9c', '\xe7\xa8\x8b\xe5\xba\x8f']
+
+list = ['']
+for j in range(len(book_name)):
+        for i in range(2):
+            throttle = Throttle(5)
+            url = 'https://book.douban.com/tag/'+book_name[j]+'?start='+str(i*10)+'&type=T'
+            throttle.wait(url)
+            html = download(url)
+            text = returnString('<div class="pic".*?<h2.*?>.*?<a href="(.*?)".*?>.*?</a>.*?</h2>.*?</div>',html)
+            print text[i]
+            for item in text:
+                q = 0
+                throttle = Throttle(5)
+                throttle.wait(item)
+                html = download(item)
+                if list == item:
+                    break
+
+                list[q] = item;
+                q += 0
+                name = returnString('<h1.*?<span.*?>(.*?)</span>.*?</h1>',html)
+                author = returnString('<div id="info".*?<a href="https://book.douban.com/.*?/.*?/">(.*?)</a>',html)
+                press = returnString('<span class="pl">出版社:</span>(.*?)<br/>',html)
+                publication_date = returnString('<span class="pl">出版年:</span>(.*?)<br/>', html)
+                pages = returnString('<span class="pl">页数:</span>(.*?)<br/>', html)
+                price = returnString('<span class="pl">定价:</span>(.*?)<br/>', html)
+                binding = returnString('<span class="pl">装帧:</span>(.*?)<br/>', html)
+                isbn = returnString('<span class="pl">ISBN:</span>(.*?)<br/>', html)
+                score = returnString('<strong class="ll rating_num " property="v:average">(.*?)</strong>',html)
+                score_people = returnString('<span property="v:votes">(.*?)</span>', html)
+                info = returnString('<div class="intro">(.*?)</div>',html)
+                img = returnString('<div id="mainpic" class.*?>.*?<a.*?<img[^>]+src=["\'](.*?)["\'].*?</a>',html)
+                for k in range(len(name)):
+
+                    try:
+                        info = info[0].strip().replace("<p>", "").replace("</p>", "").replace(" ", "").replace(
+                            '<ahref="javascript:void(0)"class="ja_show_full">(展开全部)</a>', "")
+                        urllib.urlretrieve(img[0], '/media/jhy/系统/img/%s.jpg' % name[k])
+                        sql = "insert into book(type,name,author,publication_date,pages,price,binding,isbn,score,score_people,press,info,img) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                        author_text = author[k].strip().replace(" ", "").replace("\n", "")
+                        cur.execute(sql,(book_name[j],name[0],author_text,publication_date[0]
+                                         ,pages[0],price[0],binding[0],isbn[0],score[0]
+                                         ,score_people[0].strip(),press[0].strip(),info.strip()
+                                         ,'C:\img\%s.jpg'%name[k]))
+                        coon.commit()
+
+                    except(IndexError):
+                        print
+                    except Exception as e:
+                        print e.args;
+
+                    except TypeError:
+                        print
+
+
