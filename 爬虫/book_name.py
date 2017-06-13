@@ -11,10 +11,12 @@ def download(url):
         print  'Download error ：',e.reason
         html = None;
 
-    return html.decode('utf-8');
+    return html
 
 
 book = []
 url = 'https://book.douban.com/tag/'
+html = download(url)
 pattern = re.compile('<a href="/tag/.*?">(.*?)</a>',re.S)
-print download(url)
+text = re.findall(pattern, html)
+print text

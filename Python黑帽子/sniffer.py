@@ -7,10 +7,10 @@ import time
 from ctypes import *
 from netaddr import IPAddress,IPNetwork
 
-host = "172.16.27.24"
+host = "172.16.144.25"
 
 #扫描的子网
-subnet = "172.16.27.0 /24"
+subnet = "172.0.0.0 /8"
 
 #自定义到字符串,我们将在ICMP响应中核对
 magic_message = "PYTHONRULES!"
